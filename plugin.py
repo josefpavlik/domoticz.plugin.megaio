@@ -25,7 +25,7 @@ import re
 
 class BasePlugin:
     board = 0
-    runbubg = 0
+    running = 0
    
     def set_relay(self,Unit, val):
         command="megaio "+self.board+" rwrite " + str(Unit) + " "+(val and "on" or "off") 
@@ -46,7 +46,7 @@ class BasePlugin:
         for x in range(1, 8):
             self.set_relay(x, Devices[x].nValue)
         Domoticz.Heartbeat(3)
-        running=1
+        self.running=1
 
 
     def onStop(self):
@@ -67,7 +67,7 @@ class BasePlugin:
         unused=0
 
     def onHeartbeat(self):
-        if running:
+        if self.running:
           for Unit in range(1,8):
             command="megaio "+self.board+" rread "+str(Unit)
             val=os.popen(command).read()
