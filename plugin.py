@@ -15,6 +15,7 @@
     </description>
     <params>
         <param field="Mode1" label="board number" width="75px" default="0"/>
+        <param field="Mode2" label="debug" width="75px" default="0"/>
     </params>
 </plugin>
 """
@@ -26,10 +27,11 @@ import re
 class BasePlugin:
     board = 0
     running = 0
+    debug = 0
    
     def set_relay(self,Unit, val):
         command="megaio "+self.board+" rwrite " + str(Unit) + " "+(val and "on" or "off") 
-        Domoticz.Log("set_relay exec "+command)
+        if (self.debug): Domoticz.Log("set_relay exec "+command)
         os.system(command)
     
     def __init__(self):
@@ -40,6 +42,7 @@ class BasePlugin:
       
     def onStart(self):        
         self.board=Parameters["Mode1"]
+        self.debug=Parameters["Mode2"]
         Domoticz.Log("onStart - Plugin is starting.")
         for x in range(len(Devices), 8):
             Domoticz.Device(Name="Relay_"+str(x+1), Unit=x+1, TypeName="Switch", Used=1).Create()
@@ -71,8 +74,12 @@ class BasePlugin:
           for Unit in range(1,8):
             command="megaio "+self.board+" rread "+str(Unit)
             val=os.popen(command).read()
-#           Domoticz.Log("read cmd "+command+" result="+val)
-            if (Unit in Devices): Devices[Unit].Update(int(val),val)
+            try:
+              int(val)
+              if (Unit in Devices): Devices[Unit].Update(int(val),val)
+            except:
+              if (self.debug): Domoticz.Log(command+" got value"+val)
+            if (self.debug): Domoticz.Log("read cmd "+command+" result="+val)
 
       
 
