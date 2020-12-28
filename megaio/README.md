@@ -1,3 +1,5 @@
+clonned from https://github.com/SequentMicrosystems/megaio-rpi/tree/master/python/megaio
+
 # megaio
 
 This is the python library to control [Raspberry Pi Mega-IO Expansion Card](https://www.sequentmicrosystems.com/megaio.html).
