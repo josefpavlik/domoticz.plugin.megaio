@@ -1,5 +1,3 @@
-clonned from https://github.com/SequentMicrosystems/megaio-rpi/tree/master/python/megaio
-
 # domoticz.plugin.megaio
 Domoticz plugin for MegaIO 8 relay board on raspberry
 
