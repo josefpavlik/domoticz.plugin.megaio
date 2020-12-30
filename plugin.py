@@ -1,6 +1,6 @@
 # MagaIO
 #
-# Author: Jet 2020
+# Author: Josef Pavlik, 2020
 # based on HTML.py example
 #
 # todo:
@@ -9,7 +9,7 @@
 # megaio 0 aread 7
 #
 """
-<plugin key="MegaIO" name="Raspberry MegaIO" author="Jet" version="0.1" externallink="">
+<plugin key="MegaIO" name="Raspberry MegaIO" author="Josef" version="0.1" externallink="">
     <description>
     MegaIO 8 relay board on raspberry
     </description>
@@ -49,7 +49,7 @@ class BasePlugin:
         Domoticz.Log("onStart - Plugin is starting.")
         for x in range(len(Devices), 8):
             Domoticz.Device(Name="Relay_"+str(x+1), Unit=x+1, TypeName="Switch", Used=1).Create()
-        for x in range(1, 8):
+        for x in range(1, 9):
             self.set_relay(x, Devices[x].nValue)
         Domoticz.Heartbeat(3)
         self.running=1
@@ -76,7 +76,7 @@ class BasePlugin:
         if self.running:
           val=megaio.get_relays(self.board)
           if (self.debug): Domoticz.Log("read relays -> %02x" % val)
-          for Unit in range(1,8):
+          for Unit in range(1,9):
             val1=(val >> (Unit-1)) & 1
             if (Unit in Devices): Devices[Unit].Update(int(val1),str(val1))
             
