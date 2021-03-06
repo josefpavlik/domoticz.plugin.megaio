@@ -15,7 +15,12 @@
     </description>
     <params>
         <param field="Mode1" label="board number" width="75px" default="0"/>
-        <param field="Mode2" label="debug" width="75px" default="0"/>
+        <param field="Mode6" label="Debug" width="75px">
+          <options>
+              <option label="True" value="Debug"/>
+              <option label="False" value="Normal"  default="true" />
+          </options>
+      </param>
     </params>
 </plugin>
 """
@@ -45,15 +50,14 @@ class BasePlugin:
       
     def onStart(self):        
         self.board=int(Parameters["Mode1"])
-        self.debug=int(Parameters["Mode2"])
-        Domoticz.Log("onStart - Plugin is starting.")
-        for x in range(len(Devices), 8):
-            Domoticz.Device(Name="Relay_"+str(x+1), Unit=x+1, TypeName="Switch", Used=1).Create()
+        self.debug=Parameters["Mode6"]=="Debug"
+        Domoticz.Log("onStart - Plugin is starting, debug="+str(self.debug))
         for x in range(1, 9):
+            if (x not in Devices): Domoticz.Device(Name="Relay_"+str(x), Unit=x, TypeName="Switch", Used=1).Create()
+            if (x+8 not in Devices): Domoticz.Device(Name="Input_"+str(x), Unit=x+8, TypeName="Switch", Used=1).Create()
             self.set_relay(x, Devices[x].nValue)
         Domoticz.Heartbeat(3)
         self.running=1
-
 
     def onStop(self):
         Domoticz.Log("onStop - Plugin is stopping.")
@@ -75,10 +79,14 @@ class BasePlugin:
     def onHeartbeat(self):
         if self.running:
           val=megaio.get_relays(self.board)
-          if (self.debug): Domoticz.Log("read relays -> %02x" % val)
+          inp=megaio.get_opto_in(self.board)
+          if (self.debug): Domoticz.Log("read relays -> %02x, inputs -> %02x" % (val,inp))
+#          if (self.debug): Domoticz.Log("read relays -> %02x" % val)
           for Unit in range(1,9):
             val1=(val >> (Unit-1)) & 1
+            inp1=(inp >> (Unit-1)) & 1
             if (Unit in Devices): Devices[Unit].Update(int(val1),str(val1))
+            if (Unit+8 in Devices): Devices[Unit+8].Update(int(inp1),str(val1))
             
 #            command="megaio "+self.board+" rread "+str(Unit)
 #            val=os.popen(command).read()
@@ -89,7 +97,7 @@ class BasePlugin:
 #              if (self.debug): Domoticz.Log(command+" got value"+val)
 #            if (self.debug): Domoticz.Log("read cmd "+command+" result="+val)
 
-      
+
 
 global _plugin
 _plugin = BasePlugin()
