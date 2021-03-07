@@ -34,7 +34,20 @@ class BasePlugin:
     board = 0
     running = 0
     debug = 0
-   
+    inp_state = 0
+    inp_diff = 0
+
+
+# megaio sometimes returns wrong value. Read more time.
+    def get_opto_in_safe(self, a):
+        r=a
+        a^=self.inp_state
+        c=a
+        a&=self.inp_diff
+        self.inp_state^=a
+        self.inp_diff=c
+        return self.inp_state
+
     def set_relay(self,Unit, val):
 #        command="megaio "+self.board+" rwrite " + str(Unit) + " "+(val and "on" or "off") 
 #        if (self.debug): Domoticz.Log("set_relay exec "+command)
@@ -58,6 +71,7 @@ class BasePlugin:
             self.set_relay(x, Devices[x].nValue)
         Domoticz.Heartbeat(3)
         self.running=1
+        self.inp_state=megaio.get_opto_in(self.board)
 
     def onStop(self):
         Domoticz.Log("onStop - Plugin is stopping.")
@@ -79,25 +93,14 @@ class BasePlugin:
     def onHeartbeat(self):
         if self.running:
           val=megaio.get_relays(self.board)
-          inp=megaio.get_opto_in(self.board)
-          if (self.debug): Domoticz.Log("read relays -> %02x, inputs -> %02x" % (val,inp))
-#          if (self.debug): Domoticz.Log("read relays -> %02x" % val)
+          a=megaio.get_opto_in(self.board)
+          inp=self.get_opto_in_safe(a)
+          if (self.debug): Domoticz.Log("read relays -> %02x, raw -> %02x, inputs -> %02x" % (val,a,inp))
           for Unit in range(1,9):
             val1=(val >> (Unit-1)) & 1
             inp1=(inp >> (Unit-1)) & 1
             if (Unit in Devices): Devices[Unit].Update(int(val1),str(val1))
             if (Unit+8 in Devices): Devices[Unit+8].Update(int(inp1),str(val1))
-            
-#            command="megaio "+self.board+" rread "+str(Unit)
-#            val=os.popen(command).read()
-#            try:
-#              int(val)
-#              if (Unit in Devices): Devices[Unit].Update(int(val),val)
-#            except:
-#              if (self.debug): Domoticz.Log(command+" got value"+val)
-#            if (self.debug): Domoticz.Log("read cmd "+command+" result="+val)
-
-
 
 global _plugin
 _plugin = BasePlugin()
